@@ -300,6 +300,44 @@
           @escalapro.ar
         </a>
       </div>
+
+      <div class="form-divider"><span>o contanos por escrito</span></div>
+
+      <form id="contact-form" class="contact-form" novalidate>
+        <div class="field-row">
+          <div class="field">
+            <label for="f-nombre">Nombre</label>
+            <input id="f-nombre" name="nombre" type="text" autocomplete="name" required minlength="2" maxlength="80" />
+          </div>
+          <div class="field">
+            <label for="f-contacto">Email o WhatsApp</label>
+            <input id="f-contacto" name="contacto" type="text" autocomplete="email" required minlength="5" maxlength="120" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="f-rubro">Rubro de tu negocio</label>
+          <select id="f-rubro" name="rubro">
+            <option value="">Elegí una opción</option>
+            <option>Gastronomía</option>
+            <option>Tienda online</option>
+            <option>Salud y bienestar</option>
+            <option>Servicios profesionales</option>
+            <option>Otro</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-mensaje">Contanos sobre tu proyecto</label>
+          <textarea id="f-mensaje" name="mensaje" rows="4" required minlength="5" maxlength="1000"></textarea>
+        </div>
+        <div class="field hp-field" aria-hidden="true">
+          <label for="f-empresa">No completar este campo</label>
+          <input id="f-empresa" name="empresa" type="text" tabindex="-1" autocomplete="off" />
+        </div>
+        <button type="submit" class="btn btn-primary form-submit">
+          <span class="btn-label">Enviar mensaje</span>
+        </button>
+        <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
+      </form>
     </div>
   </section>
 
@@ -331,6 +369,43 @@
     const nav = document.getElementById('nav');
     burger.addEventListener('click', () => nav.classList.toggle('open'));
     document.querySelectorAll('.nav-links a').forEach(a => a.addEventListener('click', () => nav.classList.remove('open')));
+
+    const form = document.getElementById('contact-form');
+    const status = document.getElementById('form-status');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = form.querySelector('.form-submit');
+      const data = Object.fromEntries(new FormData(form).entries());
+
+      status.textContent = '';
+      status.className = 'form-status';
+      submitBtn.disabled = true;
+      submitBtn.querySelector('.btn-label').textContent = 'Enviando...';
+
+      try {
+        const res = await fetch('/api/contacto', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        const body = await res.json().catch(() => ({}));
+
+        if (res.ok) {
+          status.textContent = '¡Listo! Te vamos a contactar a la brevedad.';
+          status.className = 'form-status ok';
+          form.reset();
+        } else {
+          status.textContent = body.detail || 'No pudimos enviar tu mensaje. Probá por WhatsApp.';
+          status.className = 'form-status error';
+        }
+      } catch (err) {
+        status.textContent = 'No pudimos enviar tu mensaje. Probá por WhatsApp.';
+        status.className = 'form-status error';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.querySelector('.btn-label').textContent = 'Enviar mensaje';
+      }
+    });
   </script>
 </body>
 </html>
